@@ -5,7 +5,7 @@
  * them to suit your project as necessary.
  *
  * More information about configuration can be found at:
- * 
+ *
  * https://trufflesuite.com/docs/truffle/reference/configuration
  *
  * To deploy via Infura you'll need a wallet provider (like @truffle/hdwallet-provider)
@@ -24,6 +24,7 @@
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
+  contracts_build_directory: "./build-contract",
   /**
    * Networks define how you connect to your ethereum client and let you set the
    * defaults web3 uses to send transactions. If you don't specify one truffle
