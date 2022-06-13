@@ -10,7 +10,8 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
 const nameContractInfo = {
-  id: process.env.REACT_APP_NAME_CONTRACT_NETWORK_ID, address: process.env.REACT_APP_NAME_CONTRACT_ADDRESS
+  id: process.env.REACT_APP_NAME_CONTRACT_NETWORK_ID,
+  address: process.env.REACT_APP_NAME_CONTRACT_ADDRESS
 };
 
 const MySwal = withReactContent(Swal);
@@ -66,23 +67,26 @@ const checkSwitchNetwork = async (web3, chainId) => {
 };
 
 /**
- * Create names
- * @param nameContract
- * @param name
- * @param accounts
- * @return {Promise<*[]>}
+ * Generate names.
+ * TODO: It's just a quick solution by generating suffix texts, and exclude duplicated names.
+ *  1. Name generating setting.
+ *  2. Create a struct in the smart contract for storing existing characters,
+ *   but the performance or the gas fee might be a problem.
+ * @return {Promise<*[]>} Array of names
  */
 const generateNames = async ({ nameContract, name, accounts }) => {
   try {
     const names = [...Array(10)].map((_, i) => {
+      // Remove prefix 0.
       const text = Math.random().toString(36).substring(2);
-      console.log(text);
 
+      // Suffix min length: 2
       const suffix = text.substring(0, 2 + Math.min(i, text.length - 2));
 
       return `${name}_${suffix}`;
     });
 
+    // Exclude duplicated names
     const results = await Promise.all(names
       .map(async (item) => {
         return isNameExists({ nameContract, name: item, accounts });
@@ -96,6 +100,9 @@ const generateNames = async ({ nameContract, name, accounts }) => {
   }
 };
 
+/**
+ * Check whether the name does exist
+ */
 const isNameExists = async ({ nameContract, accounts, name }) => {
   return await nameContract.methods.isNameExists(name)
     .call({ from: accounts[0] });
@@ -131,7 +138,6 @@ const saveName = async ({ nameContract, accounts, name, setFormNameAction }) => 
 
   if (!exists) {
     const transaction = await nameContract.methods.setName(name).send({ from: accounts[0] });
-    console.log(transaction);
 
     return !!(transaction?.transactionHash?.length);
   }
@@ -252,7 +258,6 @@ const App = () => {
       // Listen network changed
       window.ethereum?.on('networkChanged', (networkId) => {
         console.log('changed network:', networkId);
-        console.log(typeof networkId);
 
         setChainId(networkId);
       });
@@ -264,8 +269,6 @@ const App = () => {
     if (!chainMap || !chainId) return;
 
     const networkName = chainId && chainMap ? chainMap.get(chainId)?.name : '';
-
-    console.log('network name:', networkName);
 
     setNetwork(networkName);
   }, [chainMap, chainId]);
@@ -280,8 +283,6 @@ const App = () => {
   useEffect(() => {
     (async () => {
       const contract = web3 && chainId && nameContractInfo.id == chainId ? new web3.eth.Contract(NameStorageContract.abi, nameContractInfo.address) : null;
-
-      console.log('name contract:', contract);
 
       setNameContract(contract);
     })();
